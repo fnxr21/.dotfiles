@@ -1,34 +1,34 @@
-# Secrets / credentials
-**/*credential*
-**/*credentials*
-**/*secret*
-**/*secrets*
-**/*token*
-**/*password*
-**/*.pem
-**/*.key
+# # Secrets / credentials
+# **/*credential*
+# **/*credentials*
+# **/*secret*
+# **/*secrets*
+# **/*token*
+# **/*password*
+# **/*.pem
+# **/*.key
 
-# Cache
-**/cache/
-**/Cache/
-**/Caches/
-**/cache2/
+# # Cache
+# **/cache/
+# **/Cache/
+# **/Caches/
+# **/cache2/
 
-# Runtime / logs
-**/logs/
-**/Log/
-**/tmp/
+# # Runtime / logs
+# **/logs/
+# **/Log/
+# **/tmp/
 
-# Database / state
-**/*.db
-**/*.sqlite
-**/*.sqlite3
+# # Database / state
+# **/*.db
+# **/*.sqlite
+# **/*.sqlite3
 
-# Session
-**/session*
-**/state/
+# # Session
+# **/session*
+# **/state/
 
-# Editor temporary files
-*~
-*.swp
-*.swo
+# # Editor temporary files
+# *~
+# *.swp
+# *.swo

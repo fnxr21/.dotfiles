@@ -1,0 +1,9 @@
+password[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
+api[_-]?key[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
+client[_-]?secret[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
+access[_-]?token[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
+private[_-]?key[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
+gli-dev-storage\.json
+gli-dev-secret\.json
+
+for-safety
