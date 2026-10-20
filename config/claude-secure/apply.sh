@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # claude-secure: add Claude Code secret protection to a project.
 # Usage: apply.sh [--local] [project-dir]     (default: current folder)
-#   default  : your own project. Writes .claude/settings.json, CLAUDE.md, .gitignore
-#              (meant to be committed).
+#   default  : your own project. Writes .claude/settings.json, CLAUDE.md, .gitignore.
+#              .claude/ and CLAUDE.md are listed in .gitignore (kept on this machine only).
 #   --local  : someone else's project (used after `git clone`). Never touches tracked
 #              files: writes .claude/settings.local.json, .claude/CLAUDE.md and
 #              .git/info/exclude, so nothing shows up in `git status`.
@@ -99,7 +99,7 @@ fi
 # 4) ignore list  (add only missing lines)
 #    own project: .gitignore (committed)   --local: .git/info/exclude (never committed)
 ignore=.gitignore
-extra=()
+extra=("# --- claude-secure: local only, not committed ---" ".claude/" "CLAUDE.md")
 if [ $LOCAL -eq 1 ]; then
   [ -n "$gitdir" ] || { echo "claude-secure: --local needs a git repo" >&2; exit 1; }
   ignore=$(git rev-parse --git-path info/exclude)
