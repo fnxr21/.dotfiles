@@ -18,6 +18,10 @@ The setup provides:
 
 > **Important:** All examples in this guide use fake credentials. Never use real credentials for testing.
 
+> **This dotfiles setup:** `./install.sh --packages` installs git-secrets (apt / brew), and `./install.sh`
+> sets up the hooks template (section 10). The active rules are already in `home/.gitconfig`
+> (`secrets.patterns`). Use this guide to understand the setup, or to set it up by hand.
+
 ---
 
 ## 1. Prerequisites
@@ -40,7 +44,9 @@ make --version
 
 # 2. Clone git-secrets
 
-We keep the `git-secrets` source under `~/.config`.
+Easiest: `sudo apt install git-secrets` (Ubuntu) or `brew install git-secrets` (macOS), then skip to section 5.
+
+To build from source instead, we keep the `git-secrets` source under `~/.config`.
 
 Create the directory:
 
@@ -164,13 +170,13 @@ Create a custom pattern file:
 
 ```fish
 mkdir -p ~/.config/git-secrets
-touch ~/.config/git-secrets/custom-patterns
+touch ~/.config/git-secrets/patterns
 ```
 
 Open it:
 
 ```fish
-nano ~/.config/git-secrets/custom-patterns
+nano ~/.config/git-secrets/patterns
 ```
 
 Example:
@@ -187,7 +193,7 @@ private[_-]?key[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
 
 ## Load the custom rules
 
-`git-secrets` does not automatically read the `custom-patterns` file.
+`git-secrets` does not automatically read the `patterns` file.
 
 Load the rules into the global Git configuration:
 
@@ -196,8 +202,10 @@ while read -l pattern
     test -n "$pattern"; or continue
     string match -qr '^#' -- "$pattern"; and continue
     git secrets --add --global "$pattern"
-end < ~/.config/git-secrets/custom-patterns
+end < ~/.config/git-secrets/patterns
 ```
+
+Only run this once: running it again adds the same rules twice.
 
 Verify:
 
@@ -236,6 +244,8 @@ Add a private-key pattern:
 ```fish
 git secrets --add --global '-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----'
 ```
+
+> Not enabled in this dotfiles setup. gitleaks (run by the pre-commit hook) already blocks private keys.
 
 Optionally detect Google service-account files:
 
@@ -281,6 +291,9 @@ git secrets --add --global '\.svc'
 ```
 
 This means content containing these patterns will be rejected.
+
+> This dotfiles setup has `http://`, `https://` and a broad domain rule enabled. Side effect: any file with a
+> link (like a README) cannot be committed in repos that use the pre-commit hook.
 
 > **Important:** Blocking `.com`, `.id`, `.gli`, or `.svc` is intentionally broad. It can block legitimate text or configuration. Only use these rules if the project policy explicitly requires it.
 
@@ -385,6 +398,10 @@ You should see:
 ✓ Installed prepare-commit-msg hook
 ```
 
+In this dotfiles setup, `install.sh` then replaces `pre-commit` and `commit-msg` with the claude-secure
+versions (they still run git-secrets, plus file-name checks, gitleaks and the commit format check) and adds
+`pre-push` (no direct push to main) and `post-checkout` (protects `git clone`).
+
 Configure Git to use this template:
 
 ```fish
@@ -425,11 +442,13 @@ Expected:
 
 ```text
 commit-msg
+post-checkout
 pre-commit
+pre-push
 prepare-commit-msg
 ```
 
-This confirms that new repositories automatically receive the `git-secrets` hooks.
+This confirms that new repositories automatically receive the hooks (also on `git clone`).
 
 ---
 
@@ -464,7 +483,7 @@ The secret is detected.
 Create:
 
 ```fish
-echo 'DB_PASSWORD=my-super-secret-password' > db-test.txt
+echo 'db_password=my-super-secret-password' > db-test.txt
 ```
 
 Scan:
@@ -473,7 +492,10 @@ Scan:
 git secrets --scan
 ```
 
-If the password rule is registered, it should be detected.
+It is detected by the `password` rule.
+
+> Patterns are **case-sensitive**: `DB_PASSWORD=...` (uppercase) is NOT caught by git-secrets.
+> gitleaks, which the pre-commit hook also runs, does catch it.
 
 Check your active rules if necessary:
 
@@ -508,7 +530,7 @@ Scan:
 git secrets --scan google-credential-test.json
 ```
 
-The private-key or service-account pattern should be detected.
+git-secrets detects it only if you added the section 7 rules. gitleaks blocks the private key either way.
 
 ---
 
@@ -668,7 +690,7 @@ The fake secret should be detected.
 
 The Git template applies to repositories initialized after the template was configured.
 
-Existing repositories need the hook installed once.
+Existing repositories need the hooks installed once.
 
 Go into the repository:
 
@@ -676,11 +698,14 @@ Go into the repository:
 cd ~/path/to/existing-project
 ```
 
-Run:
+Run (this dotfiles setup):
 
 ```fish
-git secrets --install
+claude-secure            # your own project
+claude-secure --local    # someone else's project (changes nothing tracked)
 ```
+
+Without claude-secure, `git secrets --install` adds only the plain git-secrets hooks.
 
 Check:
 
@@ -693,6 +718,7 @@ You should see:
 ```text
 commit-msg
 pre-commit
+pre-push
 prepare-commit-msg
 ```
 
@@ -744,7 +770,7 @@ The final setup looks like:
 ├── .config/
 │   └── git-secrets/
 │       ├── git-secrets/       # cloned source
-│       ├── custom-patterns    # custom secret patterns
+│       ├── patterns           # custom secret patterns
 │       └── global.gitignore   # globally ignored credential files
 │
 ├── .local/
@@ -754,9 +780,11 @@ The final setup looks like:
 ├── .git-templates/
 │   └── git-secrets/
 │       └── hooks/
-│           ├── commit-msg
-│           ├── pre-commit
-│           └── prepare-commit-msg
+│           ├── commit-msg          # claude-secure (format check + git-secrets)
+│           ├── post-checkout       # claude-secure (protects git clone)
+│           ├── pre-commit          # claude-secure (file names + git-secrets + gitleaks)
+│           ├── pre-push            # claude-secure (no direct push to main)
+│           └── prepare-commit-msg  # git-secrets
 │
 └── .gitconfig                 # global Git configuration
 ```
@@ -796,13 +824,19 @@ The complete protection flow is:
              │   git-secrets   │
              ├─────────────────┤
              │ AWS credentials │
-             │ DB passwords    │
+             │ password=       │
              │ API keys        │
              │ Client secrets  │
              │ Access tokens   │
-             │ Private keys    │
              │ URLs            │
              │ Custom patterns │
+             └────────┬────────┘
+                      │
+                      ▼
+             ┌─────────────────┐
+             │    gitleaks     │
+             │ (private keys,  │
+             │  tokens, more)  │
              └────────┬────────┘
                       │
                 ┌─────┴─────┐
@@ -950,11 +984,10 @@ Before considering the setup complete:
 * [ ] `git-secrets` available in Fish PATH
 * [ ] AWS rules registered globally
 * [ ] Custom secret rules registered globally
-* [ ] Google private-key detection tested
 * [ ] Database password detection tested
 * [ ] API key detection tested
 * [ ] Access-token detection tested
-* [ ] Private-key detection tested
+* [ ] Private-key detection tested (gitleaks, or section 7 rules)
 * [ ] HTTP detection tested
 * [ ] HTTPS detection tested
 * [ ] `.com` detection tested if required by policy
@@ -976,13 +1009,14 @@ Before considering the setup complete:
 With this configuration:
 
 ```text
-AWS credential                 → ❌ BLOCK
-Database password              → ❌ BLOCK
+AWS credential                 → ❌ BLOCK (git-secrets)
+password= / db_password=       → ❌ BLOCK (git-secrets)
+DB_PASSWORD= (uppercase)       → ❌ BLOCK (gitleaks only)
 API key                        → ❌ BLOCK
 Client secret                  → ❌ BLOCK
 Access token                   → ❌ BLOCK
-Private key                    → ❌ BLOCK
-Google service-account key     → ❌ BLOCK
+Private key                    → ❌ BLOCK (gitleaks, or section 7 rules)
+Google service-account key     → ❌ BLOCK (gitleaks, or section 7 rules)
 http://...                     → ❌ BLOCK
 https://...                    → ❌ BLOCK
 .com                           → ❌ BLOCK (if enabled)
@@ -1010,5 +1044,7 @@ cd ~/dev/lab/your-repo
 rm -f .git/hooks/pre-commit
 rm -f .git/hooks/commit-msg
 rm -f .git/hooks/prepare-commit-msg
+rm -f .git/hooks/pre-push
+rm -f .git/hooks/post-checkout
 ```
 
