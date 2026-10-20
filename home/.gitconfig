@@ -1,0 +1,34 @@
+[url "git@bitbucket.org:"]
+	insteadOf = https://bitbucket.org/
+[pull]
+	rebase = false
+[secrets]
+	providers = git secrets --aws-provider
+	patterns = (A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}
+	patterns = ABSK[A-Za-z0-9+/]{109,}=*
+	patterns = bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29t
+	patterns = (\"|')?(AWS|aws|Aws)?_?(SECRET|secret|Secret)?_?(ACCESS|access|Access)?_?(KEY|key|Key)(\"|')?\\s*(:|=>|=)\\s*(\"|')?[A-Za-z0-9/\\+=]{40}(\"|')?
+	patterns = (\"|')?(AWS|aws|Aws)?_?(ACCOUNT|account|Account)_?(ID|id|Id)?(\"|')?\\s*(:|=>|=)\\s*(\"|')?[0-9]{4}\\-?[0-9]{4}\\-?[0-9]{4}(\"|')?
+	allowed = AKIAIOSFODNN7EXAMPLE
+	allowed = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+	patterns = password[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]]+
+	patterns = api[_-]?key[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]]+
+	patterns = client[_-]?secret[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]]+
+	patterns = access[_-]?token[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]]+
+	patterns = private[_-]?key[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]]+
+	patterns = gli-dev-storage\\.json
+	patterns = gli-dev-secret\\.json
+	patterns = https?://[^[:space:]]+
+	patterns = [[:alnum:]][[:alnum:]._-]*\\.(com|id|gli|svc)([^[:space:]]*)?
+	patterns = http://
+	patterns = https://
+[init]
+	templateDir = ~/.git-templates/git-secrets
+[commit]
+	template = ~/.gitmessage
+[core]
+	excludesFile = ~/.config/git-secrets/global.gitignore
+
+# Personal values (name, email, signing key) live in ~/.gitconfig.local (not in git)
+[include]
+	path = ~/.gitconfig.local

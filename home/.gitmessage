@@ -1,0 +1,11 @@
+
+# <type>(<scope>): <summary>     (lowercase, imperative, no period, <= 72 chars)
+#
+# Types: feat fix docs style refactor perf test build ci chore revert
+# Scope: fish tmux nvim git install vscode htop claude docs ...
+# Breaking: feat(scope)!: ...   or footer "BREAKING CHANGE: ..."
+#
+# Body: why this change (wrap at 72).
+# Footer: Refs #123
+#
+# Guide: ~/dotfiles/GIT-FLOW.md
