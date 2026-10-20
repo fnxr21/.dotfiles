@@ -1,0 +1,12 @@
+# gitleaks config: default rules + allow only the FAKE example keys in docs/.
+# Run:  gitleaks git . --redact -v   and   gitleaks dir . --redact -v
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake/example keys used in documentation"
+regexes = [
+  '''FAKE_TEST_KEY_DO_NOT_USE''',
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY''',
+]

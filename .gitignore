@@ -1,34 +1,52 @@
-# # Secrets / credentials
-# **/*credential*
-# **/*credentials*
-# **/*secret*
-# **/*secrets*
-# **/*token*
-# **/*password*
-# **/*.pem
-# **/*.key
+# ---- Secrets: never commit these ----
+.env
+.env.*
+*.env
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*credential*.json
+*service-account*.json
+secrets/
+*.secret
+auth.json
+hosts.yml
+.netrc
+.npmrc
+.pypirc
+.wakatime.cfg
+.gitconfig.local
+.ssh/
+gcloud/
 
-# # Cache
-# **/cache/
-# **/Cache/
-# **/Caches/
-# **/cache2/
+# ---- Machine state: changes on every machine ----
+fish_variables
+fish_variables*
+*.save
+*.save.*
+*.bak
+lazy-lock.json.bak
 
-# # Runtime / logs
-# **/logs/
-# **/Log/
-# **/tmp/
+# ---- Cache / runtime / logs ----
+**/cache/
+**/Cache/
+**/Caches/
+**/logs/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+**/session*/
 
-# # Database / state
-# **/*.db
-# **/*.sqlite
-# **/*.sqlite3
-
-# # Session
-# **/session*
-# **/state/
-
-# # Editor temporary files
-# *~
-# *.swp
-# *.swo
+# ---- Editor / OS junk ----
+*~
+*.swp
+*.swo
+.DS_Store

@@ -5,5 +5,3 @@ access[_-]?token[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
 private[_-]?key[[:space:]]*[:=][[:space:]]*["']?[^"'[:space:]]+
 gli-dev-storage\.json
 gli-dev-secret\.json
-
-for-safety
