@@ -30,9 +30,13 @@ fi
 
 # Optional: run gitleaks on staged changes, if installed (runs fully offline)
 if command -v gitleaks >/dev/null 2>&1; then
-  gitleaks protect --staged --redact --no-banner >/dev/null 2>&1 || {
+  # v8.19+ uses `gitleaks git --staged`; older versions only have `protect`
+  if gitleaks git --help >/dev/null 2>&1; then gl=(gitleaks git --staged)
+  else gl=(gitleaks protect --staged)
+  fi
+  "${gl[@]}" --redact --no-banner >/dev/null 2>&1 || {
     echo "BLOCKED by gitleaks: a staged change looks like it contains a secret." >&2
-    echo "Run: gitleaks protect --staged --redact -v   to see where (values hidden)." >&2
+    echo "Run: ${gl[*]} --redact -v   to see where (values hidden)." >&2
     exit 1
   }
 fi
