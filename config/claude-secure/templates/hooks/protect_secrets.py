@@ -10,6 +10,7 @@ Exit code 2 = block the tool call and show the reason to Claude.
 This file never reads or prints any secret content.
 """
 import json
+import os
 import re
 import sys
 
@@ -32,8 +33,15 @@ SENSITIVE = [
     r"(^|[/\\\s'\"=(])secrets[/\\]",
 ]
 
-# Allowed: example/template files with no real values
-SAFE = [r"\.env\.example", r"\.env\.sample", r"\.env\.template"]
+# Allowed: example/template files with no real values, and code that only
+# names the env object (process.env.X is code, not a .env file)
+SAFE = [r"\.env\.example", r"\.env\.sample", r"\.env\.template",
+        r"process\.env\b", r"import\.meta\.env\b", r"Deno\.env\b", r"Bun\.env\b"]
+
+# Per-project false positives: one regex per line in .claude/secure-allow
+# ("#" = comment). Claude may not create or change this file itself.
+ALLOW_FILE = os.path.join(".claude", "secure-allow")
+ALLOW_FILE_RE = r"\.claude[/\\]secure-allow"
 
 # Bash commands that dump secrets from memory/env
 BAD_COMMANDS = [
@@ -47,8 +55,26 @@ BAD_COMMANDS = [
 ]
 
 
-def strip_safe(text: str) -> str:
-    for p in SAFE:
+def load_allow(project_dir: str) -> list:
+    try:
+        with open(os.path.join(project_dir, ALLOW_FILE)) as f:
+            lines = [l.strip() for l in f]
+    except OSError:
+        return []
+    rules = []
+    for l in lines:
+        if not l or l.startswith("#"):
+            continue
+        try:
+            re.search(l, "")  # validate the regex
+            rules.append(l)
+        except re.error:
+            pass  # bad regex: ignore the line, keep blocking
+    return rules
+
+
+def strip_safe(text: str, extra: list) -> str:
+    for p in SAFE + extra:
         text = re.sub(p, "", text, flags=re.IGNORECASE)
     return text
 
@@ -65,7 +91,19 @@ def main() -> None:
     # Collect every string field that could contain a path or command
     fields = [str(v) for k, v in tin.items()
               if k in ("file_path", "path", "pattern", "glob", "command", "notebook_path")]
-    text = strip_safe(" ".join(fields))
+    raw = " ".join(fields)
+
+    # Only the user edits the allow list (reading it is fine)
+    if tool != "Read" and re.search(ALLOW_FILE_RE, raw):
+        print(
+            f"BLOCKED by security policy: {tool} would change .claude/secure-allow. "
+            "Only the user may edit the allow list. Tell the user which line to add.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or "."
+    text = strip_safe(raw, load_allow(project_dir))
 
     for p in SENSITIVE:
         if re.search(p, text, flags=re.IGNORECASE):
