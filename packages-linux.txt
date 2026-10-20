@@ -1,0 +1,18 @@
+# Linux (Ubuntu/Debian) apt packages. One per line; "#" = comment.
+# Install with:  ./install.sh --packages
+# NOT in apt (install by hand, see README): neovim >= 0.10, ghostty,
+#   asdf, lazygit, gitleaks, PlemolJP font, VS Code Insiders
+git
+stow
+fish
+tmux
+fzf
+fd-find
+bat
+ripgrep
+jq
+htop
+xdg-utils
+git-secrets
+curl
+build-essential
