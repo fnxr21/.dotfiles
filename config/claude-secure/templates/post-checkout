@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# claude-secure post-checkout hook: protect a repo right after `git clone`.
+# Git runs this from any terminal, VS Code or script (no shell alias needed).
+# Uses --local mode: nothing tracked is changed, nothing shows in `git status`.
+# Skip once: CLAUDE_SECURE_SKIP=1 git clone ...
+
+# $1 = previous HEAD. All zeros only on the first checkout of a clone.
+[[ "$1" =~ ^0+$ ]] || exit 0
+[ -n "${CLAUDE_SECURE_SKIP:-}" ] && exit 0
+
+top=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+
+# Skip clones made by tools (plugin managers, package managers)
+case "$top" in
+  "$HOME"/.local/*|"$HOME"/.cache/*|"$HOME"/.asdf/*|"$HOME"/.tmux/*|"$HOME"/.vscode*|\
+  "$HOME"/go/pkg/*|"$HOME"/.cargo/*|"$HOME"/.nvm/*|/opt/homebrew/*|/usr/local/*|/home/linuxbrew/*)
+    exit 0 ;;
+esac
+
+kit="${CLAUDE_SECURE_HOME:-$HOME/.config/claude-secure}"
+[ -x "$kit/apply.sh" ] && "$kit/apply.sh" --local "$top" || true
+exit 0

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# claude-secure commit-msg hook: Conventional Commits, no emoji, then git-secrets.
+# Format: <type>(<scope>): <summary>   e.g.  fix(tmux): reload config on macos
+# Skip once (only if you are sure): git commit --no-verify
+
+msg_file="$1"
+subject=$(grep -v '^#' "$msg_file" | sed '/^[[:space:]]*$/d' | head -n1)
+
+# Messages git writes itself
+case "$subject" in
+  "Merge "*|"Revert \""*|"fixup! "*|"squash! "*|"amend! "*|"Initial commit") subject="" ;;
+esac
+
+if [ -n "$subject" ]; then
+  types='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+  if ! printf '%s' "$subject" | grep -Eq "^($types)(\([a-z0-9._/-]+\))?!?: [^[:space:]].*"; then
+    echo "BLOCKED: commit message is not Conventional Commits:" >&2
+    echo "  $subject" >&2
+    echo "Use: <type>(<scope>): <summary>   types: ${types//|/ }" >&2
+    echo "  e.g. feat(fish): add git wrapper for clone" >&2
+    exit 1
+  fi
+  if [ ${#subject} -gt 72 ]; then
+    echo "BLOCKED: subject is ${#subject} chars, keep it <= 72. Put details in the body." >&2
+    exit 1
+  fi
+  # No emoji / icons anywhere in the message
+  if grep -v '^#' "$msg_file" | perl -CSD -ne 'exit 1 if /[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}\x{FE0F}]/'; then :; else
+    echo "BLOCKED: no emoji or icons in commit messages." >&2
+    exit 1
+  fi
+fi
+
+# git-secrets on the message, if set up
+if command -v git-secrets >/dev/null 2>&1 && git config --get-all secrets.patterns >/dev/null 2>&1; then
+  git secrets --commit_msg_hook -- "$@" || exit 1
+fi
+exit 0

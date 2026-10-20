@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# claude-secure pre-push hook: never push straight to main/master. Use a PR.
+# Creating main on an empty remote (first push of a new project) is allowed.
+# Emergency only: git push --no-verify   (GitHub branch protection still applies)
+
+zero='^0+$'
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      # branch does not exist on the remote yet -> first push, allow
+      [[ "$remote_sha" =~ $zero ]] && [[ ! "$local_sha" =~ $zero ]] && continue
+      echo "BLOCKED: do not push to ${remote_ref#refs/heads/} directly." >&2
+      echo "Push your branch and open a pull request into ${remote_ref#refs/heads/}:" >&2
+      echo "  git push -u $1 $(git rev-parse --abbrev-ref HEAD)" >&2
+      exit 1 ;;
+  esac
+done
+exit 0

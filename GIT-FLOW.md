@@ -1,20 +1,36 @@
 # Git Flow + Conventional Commits
 
-How to make branches and write commits in this repo.
+How to make branches and write commits. These rules apply to every repo on this
+machine (git hooks from `~/.git-templates`, see section 4).
 
 ---
 
-## 1. Branches
+## 1. Rules
 
-| Branch       | Comes from | Merges into          | What it is for                          |
-|--------------|------------|----------------------|-----------------------------------------|
-| `main`       | —          | —                    | Stable. What a new laptop installs.     |
-| `develop`    | `main`     | `main` (via release) | Daily work lands here first.            |
-| `feature/*`  | `develop`  | `develop`            | One new thing (tool, config, function). |
-| `release/*`  | `develop`  | `main` + `develop`   | Freeze, test install, then ship.        |
-| `hotfix/*`   | `main`     | `main` + `develop`   | Urgent fix for something broken on main.|
+1. **Never push to `main`.** Not from the terminal, VS Code, scripts or Claude.
+   `main` only changes through a **pull request**.
+2. Daily work goes to `dev` through `feature/*` branches.
+3. Code moves up the layers: `dev` → `stg` → `beta` (optional) → `main` (PR).
+4. Commits follow Conventional Commits. No emoji or icons.
 
-Other long-lived branches (for example `linux-ubuntu`) stay as they are.
+---
+
+## 2. Branches
+
+| Branch      | Layer                  | Comes from | Goes to                     |
+|-------------|------------------------|------------|-----------------------------|
+| `main`      | production             | —          | — (PR only)                 |
+| `beta`      | prod-like testing (optional) | `stg` | `main` via PR             |
+| `stg`       | staging deploy         | `dev`      | `beta`, or `main` via PR    |
+| `dev`       | development            | `main`     | `stg`                       |
+| `feature/*` | one feature / new function | `dev`  | `dev`                       |
+| `hotfix/*`  | urgent fix for prod    | `main`     | `main` via PR, then `dev`   |
+
+```
+feature/*  ──►  dev  ──►  stg  ──►  beta (optional)  ──PR──►  main
+                 ▲                                              │
+                 └──────────────  hotfix/*  ◄────────────────────┘
+```
 
 ### Branch names
 
@@ -22,134 +38,167 @@ Lowercase, words joined with `-`:
 
 ```
 feature/nvim-lsp-go
-feature/tmux-linux-clipboard
-release/v1.2.0
+feature/install-linux-packages
 hotfix/install-stow-path
 ```
 
 ---
 
-## 2. Daily flow
+## 3. Daily flow
 
-### New feature
+### New feature or function
 
 ```bash
-git switch develop
-git pull
+git switch dev && git pull
 git switch -c feature/tmux-linux-clipboard
 
-# ...edit, then commit (see section 3)...
-git add config/tmux/linux.conf
-git commit -m "feat(tmux): copy to system clipboard on linux"
+# ...edit and commit (section 5)...
 
-# done: merge back into develop
-git switch develop
+git switch dev
 git merge --no-ff feature/tmux-linux-clipboard
 git branch -d feature/tmux-linux-clipboard
-git push fn develop
+git push origin dev
 ```
 
-### Release (develop → main)
+### Deploy to staging
 
 ```bash
-git switch develop
-git switch -c release/v1.2.0
-./install.sh --dry-run              # test before shipping
-git commit -am "chore(release): v1.2.0"
+git switch stg && git pull
+git merge --no-ff dev
+git push origin stg
+```
 
-git switch main
-git merge --no-ff release/v1.2.0
+### Prod-like testing (optional)
+
+```bash
+git switch beta && git pull
+git merge --no-ff stg
+git push origin beta
+```
+
+### Release to production
+
+Open a pull request on GitHub: **`beta` → `main`** (or **`stg` → `main`** when
+you skip beta). Merge it there. Then tag:
+
+```bash
+git switch main && git pull
 git tag -a v1.2.0 -m "v1.2.0"
-
-git switch develop
-git merge --no-ff release/v1.2.0
-git branch -d release/v1.2.0
-git push fn main develop --tags
+git push origin v1.2.0
 ```
 
-### Hotfix (broken on main)
+### Hotfix (broken in production)
 
 ```bash
-git switch main
+git switch main && git pull
 git switch -c hotfix/install-stow-path
 git commit -am "fix(install): use correct stow target dir"
+git push -u origin hotfix/install-stow-path
+# open a PR: hotfix/install-stow-path -> main, merge it
 
-git switch main
+# bring the fix back down so it is not lost
+git switch dev && git pull
 git merge --no-ff hotfix/install-stow-path
-git tag -a v1.2.1 -m "v1.2.1"
-
-git switch develop
-git merge --no-ff hotfix/install-stow-path
+git push origin dev
 git branch -d hotfix/install-stow-path
-git push fn main develop --tags
 ```
-
-> Using the `git-flow` tool? `git flow init -d` uses these same names
-> (`main`, `develop`, `feature/`, `release/`, `hotfix/`).
 
 ---
 
-## 3. Conventional Commits
+## 4. What enforces this
+
+| Where | What | Bypass |
+|-------|------|--------|
+| `pre-push` hook | blocks any push to `main`/`master` (a first push that creates `main` on an empty remote is allowed) | `--no-verify` (emergency only) |
+| `commit-msg` hook | blocks non-conventional messages, subjects over 72 chars, emoji | `--no-verify` |
+| GitHub branch protection on `main` | requires a PR; blocks even `--no-verify` | repo admin |
+
+Hooks are local. **Turn on branch protection** so the rule holds from
+everywhere: GitHub → repo → Settings → Branches → Add rule → `main` →
+"Require a pull request before merging".
+
+Old repos (made before these hooks): run `claude-secure` (own repo) or
+`claude-secure --local` (someone else's) inside them.
+
+---
+
+## 5. Commits
 
 Format:
 
 ```
-<type>(<scope>): <short summary>
+<type>(<scope>): <summary>
 
-<optional body: why, not what>
-
-<optional footer: BREAKING CHANGE: ..., Refs #12>
+- <change one>
+- <change two>
 ```
 
 Rules:
 
-- Summary in lowercase, imperative ("add", not "added"), no period, ≤ 72 chars.
-- `scope` = the tool or folder you touched: `fish`, `tmux`, `nvim`, `git`, `install`, `vscode`, `htop`, `claude`, `docs`.
-- Breaking change: add `!` after the type, or a `BREAKING CHANGE:` footer.
+- Summary: lowercase, imperative ("add", not "added"), no period, ≤ 72 chars.
+- Short and clear. Say what changed; skip what the diff already shows.
+- **Small change:** subject line only.
+- **Many changes:** subject line, blank line, then one bullet per change.
+- No emoji, no icons, no ticket noise.
+- `scope` = the tool or area you touched: `fish`, `tmux`, `nvim`, `git`,
+  `install`, `vscode`, `claude`, `docs` ...
+- Breaking change: `!` after the type, plus a `BREAKING CHANGE:` line.
 
 ### Types
 
-| Type       | Use when                                        |
-|------------|-------------------------------------------------|
-| `feat`     | New config, tool, alias, function               |
-| `fix`      | Something was broken, now works                 |
-| `docs`     | README / docs only                              |
-| `style`    | Formatting only, no behaviour change            |
-| `refactor` | Restructure, same behaviour                     |
-| `perf`     | Faster startup / less work                      |
-| `test`     | Test scripts                                    |
-| `build`    | Package lists: `Brewfile`, `packages-linux.txt` |
-| `ci`       | CI workflows                                    |
-| `chore`    | Housekeeping: `.gitignore`, vendored files      |
-| `revert`   | Undo an earlier commit                          |
+| Type       | Use when                                   |
+|------------|--------------------------------------------|
+| `feat`     | new feature, config, tool, function        |
+| `fix`      | something was broken, now works            |
+| `docs`     | docs only                                  |
+| `style`    | formatting only, no behaviour change       |
+| `refactor` | restructure, same behaviour                |
+| `perf`     | faster / lighter                           |
+| `test`     | tests                                      |
+| `build`    | dependencies, package lists                |
+| `ci`       | CI workflows                               |
+| `chore`    | housekeeping                               |
+| `revert`   | undo an earlier commit                     |
 
 ### Examples
 
+Small:
+
 ```
-feat(fish): add claude-secure wrapper for git init
 fix(tmux): reload config path on macos
 docs: add git flow guide
-build: add htop and stow to Brewfile
-chore: ignore fish_variables and backup files
+```
+
+Many changes:
+
+```
+feat(git): enforce branch and commit rules
+
+- block direct pushes to main with a pre-push hook
+- check conventional commit format in commit-msg
+- add dev, stg and beta branch guide
+```
+
+Breaking:
+
+```
 refactor(install)!: link home/ with stow instead of cp
 
-BREAKING CHANGE: old copied files in ~ must be removed before install.
+BREAKING CHANGE: remove old copied files in ~ before running install.
 ```
 
 ### Commit template
 
-`home/.gitmessage` is linked to `~/.gitmessage` and set as `commit.template`
-in `home/.gitconfig`. Run `git commit` (no `-m`) and the editor opens with the
-type list as a reminder. Lines starting with `#` are dropped.
+`git commit` (no `-m`) opens the editor with `~/.gitmessage` as a reminder.
+Lines starting with `#` are dropped.
 
 ---
 
-## 4. Quick cheatsheet
+## 6. Cheatsheet
 
 ```bash
-git switch -c feature/<name> develop     # start feature
-git switch -c release/vX.Y.Z develop     # start release
-git switch -c hotfix/<name> main         # start hotfix
-git merge --no-ff <branch>               # finish (keep branch history)
-git log --oneline --graph --all          # see the flow
+git switch -c feature/<name> dev       # start feature
+git switch -c hotfix/<name> main       # start hotfix
+git merge --no-ff <branch>             # merge, keep branch history
+git log --oneline --graph --all        # see the flow
 ```

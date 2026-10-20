@@ -3,6 +3,15 @@
 # It checks only file NAMES that are staged. It never opens or prints file contents.
 # To skip once (only if you are sure): git commit --no-verify
 
+# Repo was made without the fish `git` wrapper (bash, VS Code, scripts): add the
+# Claude Code protection now. Own repo (no remote) -> normal, else --local.
+kit="${CLAUDE_SECURE_HOME:-$HOME/.config/claude-secure}"
+if [ ! -e .claude/hooks/protect_secrets.py ] && [ -z "${CLAUDE_SECURE_SKIP:-}" ] && [ -x "$kit/apply.sh" ]; then
+  if [ -n "$(git remote)" ]; then "$kit/apply.sh" --local . >&2 || true
+  else "$kit/apply.sh" . >&2 && echo "claude-secure: new files are not in this commit; add them next." >&2 || true
+  fi
+fi
+
 blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E -i \
   '(^|/)\.env($|\.)|(^|/)[^/]*\.env$|credential[^/]*\.json$|service[-_]?account[^/]*\.json$|application_default_credentials\.json$|\.(pem|key|p12|pfx)$|(^|/)id_(rsa|ed25519)|(^|/)secrets/' \
   | grep -E -v -i '\.env\.(example|sample|template)$')

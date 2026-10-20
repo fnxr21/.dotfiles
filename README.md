@@ -138,7 +138,7 @@ Steps:
 3. **Links**: GNU Stow links **each file** (`--no-folding`) from `config/` → `~/.config` and `home/` → `~`.
    VS Code settings are linked to the right folder for the OS.
 4. **Git**: creates `~/.gitconfig.local` (takes name/email from your old `~/.gitconfig` if it can).
-   Installs git-secrets hooks into `~/.git-templates/git-secrets` (new repos get them on `git init`).
+   Installs git-secrets hooks into `~/.git-templates/git-secrets`, plus the claude-secure `pre-commit` and `post-checkout` hooks (new repos get them on `git init` **and** `git clone`, from any terminal).
 5. **Fish plugins**: loads `vendor/fisher.fish` and runs `fisher update` → installs everything in `fish_plugins`.
    This is the **only step that downloads code** (from GitHub).
 
@@ -203,7 +203,8 @@ Default version is in `config/fish/.tool-versions`.
 |---|---|
 | `make` | runs `make`; if a line has JSON, it prints it pretty with `jq`. Note: it hides make's exit code |
 | `git` | normal `git`, but after `git init` it also runs `claude-secure` on the new repo. Skip once: `CLAUDE_SECURE_SKIP=1 git init` |
-| `claude-secure [dir]` | adds Claude Code secret protection to a project: `.claude/hooks/protect_secrets.py`, `.claude/settings.json` (merged), `CLAUDE.md` (appended), `.gitignore` lines, a git pre-commit hook. Safe to run again |
+| `claude-secure [dir]` | adds Claude Code secret protection to a project: `.claude/hooks/protect_secrets.py`, `.claude/settings.json` (merged), `CLAUDE.md` (appended), `.gitignore` lines, git hooks (pre-commit + git-secrets). Safe to run again |
+| `claude-secure --local [dir]` | same, for **someone else's** project: writes `.claude/settings.local.json`, `.claude/CLAUDE.md` and `.git/info/exclude` instead, so `git status` stays clean. Runs by itself after `git clone` |
 | `fish_mode_prompt` | empty: hides the vi-mode label |
 
 ### OS-specific fish settings
@@ -264,7 +265,17 @@ Reload: `Cmd+Shift+,` (macOS) / `Ctrl+Shift+,` (Linux).
   At the end: `[include] path = ~/.gitconfig.local`.
 - `~/.gitconfig.local`: **your name and email**. Not in git. Template: `gitconfig.local.example`.
 - `core.excludesFile` = `~/.config/git-secrets/global.gitignore` → ignored in **every** repo.
-- `init.templateDir` = `~/.git-templates/git-secrets` → new repos get git-secrets hooks.
+- `init.templateDir` = `~/.git-templates/git-secrets` → every new repo gets these hooks (any terminal, VS Code, scripts):
+
+  | hook | when | does |
+  |---|---|---|
+  | `pre-commit` | every commit | blocks secret file names, runs git-secrets, runs gitleaks (if installed). If the repo has no `.claude/` protection yet, adds it |
+  | `commit-msg` | every commit | Conventional Commits format, subject <= 72 chars, no emoji; then git-secrets on the message |
+  | `prepare-commit-msg` | every commit | git-secrets on the message |
+  | `pre-push` | every push | blocks pushes to `main`/`master` (use a PR). See [GIT-FLOW.md](GIT-FLOW.md) |
+  | `post-checkout` | right after `git clone` | runs `claude-secure --local` (skips tool folders like `~/.local`, `~/.cache`, Homebrew). Skip once: `CLAUDE_SECURE_SKIP=1 git clone ...` |
+
+  Old repos (made before this): run `claude-secure` (own repo) or `claude-secure --local` (someone else's) inside them.
 - Guide: `docs/git-secrets/first-steps.md`
 
 ### VS Code Insiders
