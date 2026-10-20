@@ -203,7 +203,7 @@ Default version is in `config/fish/.tool-versions`.
 |---|---|
 | `make` | runs `make`; if a line has JSON, it prints it pretty with `jq`. Note: it hides make's exit code |
 | `git` | normal `git`, but after `git init` it also runs `claude-secure` on the new repo. Skip once: `CLAUDE_SECURE_SKIP=1 git init` |
-| `claude-secure [dir]` | adds Claude Code secret protection to a project: `.claude/hooks/protect_secrets.py`, `.claude/settings.json` (merged), `CLAUDE.md` (appended), `.gitignore` lines, git hooks (pre-commit + git-secrets). Safe to run again |
+| `claude-secure [dir]` | adds Claude Code secret protection to a project: `.claude/hooks/protect_secrets.py`, `.claude/settings.json` (merged), `CLAUDE.md` (appended), `.gitignore` lines, git hooks (pre-commit + git-secrets). `.claude/` and `CLAUDE.md` go in `.gitignore`, so they stay on your machine. Safe to run again |
 | `claude-secure --local [dir]` | same, for **someone else's** project: writes `.claude/settings.local.json`, `.claude/CLAUDE.md` and `.git/info/exclude` instead, so `git status` stays clean. Runs by itself after `git clone` |
 | `fish_mode_prompt` | empty: hides the vi-mode label |
 

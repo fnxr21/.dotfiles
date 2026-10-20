@@ -8,7 +8,7 @@
 kit="${CLAUDE_SECURE_HOME:-$HOME/.config/claude-secure}"
 if [ ! -e .claude/hooks/protect_secrets.py ] && [ -z "${CLAUDE_SECURE_SKIP:-}" ] && [ -x "$kit/apply.sh" ]; then
   if [ -n "$(git remote)" ]; then "$kit/apply.sh" --local . >&2 || true
-  else "$kit/apply.sh" . >&2 && echo "claude-secure: new files are not in this commit; add them next." >&2 || true
+  else "$kit/apply.sh" . >&2 && echo "claude-secure: .gitignore was updated and is not in this commit; add it next." >&2 || true
   fi
 fi
 
