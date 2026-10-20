@@ -31,6 +31,30 @@ warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 run()  { if [ "$DRY" -eq 1 ]; then echo "  [dry-run] $*"; else "$@"; fi; }
 
 # ---------------------------------------------------------------- 1. packages
+# gitleaks is not in apt: download the release binary (checksum verified) to ~/.local/bin
+GITLEAKS_VERSION=8.30.1
+install_gitleaks_linux() {
+  command -v gitleaks >/dev/null && return 0
+  local arch
+  case "$(uname -m)" in
+    x86_64) arch=x64 ;; aarch64|arm64) arch=arm64 ;;
+    *) warn "gitleaks: no release for $(uname -m); install it by hand"; return 0 ;;
+  esac
+  local v=$GITLEAKS_VERSION tgz="gitleaks_${GITLEAKS_VERSION}_linux_${arch}.tar.gz"
+  local url="https://github.com/gitleaks/gitleaks/releases/download/v$v"
+  say "installing gitleaks $v -> ~/.local/bin"
+  [ "$DRY" -eq 1 ] && { echo "  [dry-run] download $url/$tgz"; return 0; }
+  local tmp; tmp=$(mktemp -d)
+  if curl -fsSL -o "$tmp/$tgz" "$url/$tgz" && curl -fsSL -o "$tmp/sums" "$url/gitleaks_${v}_checksums.txt" \
+     && (cd "$tmp" && grep " $tgz\$" sums | sha256sum -c - >/dev/null) \
+     && tar -xzf "$tmp/$tgz" -C "$tmp" gitleaks; then
+    mkdir -p "$HOME/.local/bin" && install -m 755 "$tmp/gitleaks" "$HOME/.local/bin/gitleaks"
+  else
+    warn "gitleaks download or checksum failed; install it by hand"
+  fi
+  rm -rf "$tmp"
+}
+
 install_packages() {
   case "$OS" in
     Darwin)
@@ -47,6 +71,7 @@ install_packages() {
       mapfile -t pkgs < <(grep -vE '^\s*(#|$)' "$DOT/packages-linux.txt")
       run sudo apt-get update
       run sudo apt-get install -y "${pkgs[@]}"
+      install_gitleaks_linux
       ;;
   esac
 }

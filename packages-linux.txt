@@ -1,7 +1,8 @@
 # Linux (Ubuntu/Debian) apt packages. One per line; "#" = comment.
 # Install with:  ./install.sh --packages
 # NOT in apt (install by hand, see README): neovim >= 0.10, ghostty,
-#   asdf, lazygit, gitleaks, PlemolJP font, VS Code Insiders
+#   asdf, lazygit, PlemolJP font, VS Code Insiders
+# gitleaks: install.sh downloads the release binary to ~/.local/bin
 git
 stow
 fish

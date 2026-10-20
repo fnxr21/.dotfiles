@@ -120,6 +120,39 @@ everywhere: GitHub → repo → Settings → Branches → Add rule → `main` �
 Old repos (made before these hooks): run `claude-secure` (own repo) or
 `claude-secure --local` (someone else's) inside them.
 
+### False positives
+
+Something safe got blocked? Allow **that one thing** in the layer that blocked
+it. Do not use `--no-verify`: it turns off every check, not just the wrong one.
+
+| Blocked by (message starts with) | Allow it with |
+|----------------------------------|---------------|
+| `BLOCKED by claude-secure` (file name, on commit) | a regex line in `.claude/secure-allow` |
+| `BLOCKED by security policy` (Claude Code) | a regex line in `.claude/secure-allow` |
+| `[ERROR] Matched one or more prohibited patterns` (git-secrets) | a regex line in `.gitallowed` (repo root), or `git config --add secrets.allowed '<regex>'` |
+| `BLOCKED by gitleaks` | `# gitleaks:allow` at the end of the line, or the finding ID in `.gitleaksignore` |
+
+`.claude/secure-allow`, one regex per line, `#` = comment:
+
+```
+# docs file with "credentials" in the name, no real secret
+docs/credentials-guide\.json
+# test fixture key, fake
+test/fixtures/fake\.pem
+```
+
+- Only you edit this file. Claude Code is blocked from creating or changing it.
+- Keep each line narrow: a full path, not `.*\.pem`.
+- In someone else's repo (cloned), it stays out of git via `.git/info/exclude`.
+- `process.env`, `import.meta.env`, `Deno.env`, `Bun.env` in code are already allowed.
+
+gitleaks finding ID: run `gitleaks git --staged -v` and copy the `Fingerprint:` value
+into `.gitleaksignore`.
+
+`.gitallowed` is scanned too, so write URLs with `[/]` and `[.]` or the file blocks
+itself: `https:[/][/]example[.]org[/]x`. To keep it out of git instead, use
+`git config --add secrets.allowed '<regex>'` (this repo only).
+
 ---
 
 ## 5. Commits

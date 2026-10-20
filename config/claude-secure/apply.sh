@@ -104,7 +104,7 @@ if [ $LOCAL -eq 1 ]; then
   [ -n "$gitdir" ] || { echo "claude-secure: --local needs a git repo" >&2; exit 1; }
   ignore=$(git rev-parse --git-path info/exclude)
   mkdir -p "$(dirname "$ignore")"
-  extra=(".claude/hooks/protect_secrets.py" ".claude/settings.local.json" ".claude/CLAUDE.md")
+  extra=(".claude/hooks/protect_secrets.py" ".claude/settings.local.json" ".claude/CLAUDE.md" ".claude/secure-allow")
 fi
 touch "$ignore"
 added=0

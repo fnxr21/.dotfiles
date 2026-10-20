@@ -86,7 +86,7 @@ Some tools are **not in apt**. Install them by hand on Linux:
 ├── .gitignore              blocks secrets and machine state
 ├── .gitleaks.toml          secret scanner config
 ├── vendor/fisher.fish      pinned fisher (plugin manager)
-├── docs/                   my notes (tmux, AI tools, git-secrets)
+├── config/_doc/            my notes (tmux, AI tools)
 ├── config/      ──▶ linked into ~/.config/
 │   ├── fish/               shell
 │   ├── nvim/               editor (LazyVim)
@@ -243,7 +243,7 @@ Prefix is **`Ctrl+t`** (not `Ctrl+b`).
 | `Ctrl+Shift+←/→` | move window left / right |
 
 Copy mode uses vi keys. Files: `tmux.conf` (main), `statusline.conf` (colors/status bar),
-`utility.conf` (lazygit), `macos.conf` / `linux.conf` (per OS). More notes: `docs/tmux/tmux.md`.
+`utility.conf` (lazygit), `macos.conf` / `linux.conf` (per OS). More notes: `config/_doc/tmux/tmux.md`.
 
 ### nvim
 
@@ -276,7 +276,7 @@ Reload: `Cmd+Shift+,` (macOS) / `Ctrl+Shift+,` (Linux).
   | `post-checkout` | right after `git clone` | runs `claude-secure --local` (skips tool folders like `~/.local`, `~/.cache`, Homebrew). Skip once: `CLAUDE_SECURE_SKIP=1 git clone ...` |
 
   Old repos (made before this): run `claude-secure` (own repo) or `claude-secure --local` (someone else's) inside them.
-- Guide: `docs/git-secrets/first-steps.md`
+- Guide: `config/git-secrets/readme_first_step.md`
 
 ### VS Code Insiders
 
@@ -290,8 +290,8 @@ api_key = YOUR_WAKATIME_API_KEY
 
 ### Claude Code
 
-`home/.claude/settings.json` = user settings. Install Claude Code: see `docs/ai/claude-code.md`.
-9router (optional): `docs/ai/9router.md`.
+`home/.claude/settings.json` = user settings. Install Claude Code: see `config/_doc/ai/claude-code.md`.
+9router (optional): `config/_doc/ai/9router.md`.
 
 ---
 
@@ -339,7 +339,7 @@ cd ~/dotfiles && git pull && ./install.sh
   gitleaks dir . --redact -v      # current files
   git secrets --scan
   ```
-  `.gitleaks.toml` only allows the **fake** example keys in `docs/git-secrets/`.
+  `.gitleaks.toml` only allows the **fake** example keys in `config/git-secrets/readme_first_step.md`.
 - **If a secret was committed:** deleting it is **not enough** (it stays in git history).
   1. **Rotate** the key at the provider (make a new one, turn off the old one).
   2. Then clean history (e.g. `git filter-repo`) and force-push. Only after step 1.
