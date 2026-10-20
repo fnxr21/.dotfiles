@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# claude-secure pre-commit hook: stops secret files from being committed.
+# It checks only file NAMES that are staged. It never opens or prints file contents.
+# To skip once (only if you are sure): git commit --no-verify
+
+blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E -i \
+  '(^|/)\.env($|\.)|(^|/)[^/]*\.env$|credential[^/]*\.json$|service[-_]?account[^/]*\.json$|application_default_credentials\.json$|\.(pem|key|p12|pfx)$|(^|/)id_(rsa|ed25519)|(^|/)secrets/' \
+  | grep -E -v -i '\.env\.(example|sample|template)$')
+
+if [ -n "$blocked" ]; then
+  echo "BLOCKED by claude-secure: these staged files look like secrets:" >&2
+  echo "$blocked" | sed 's/^/  - /' >&2
+  echo "Unstage them with: git rm --cached <file>" >&2
+  exit 1
+fi
+
+# Optional: run git-secrets too, if it is installed and set up for this repo
+if command -v git-secrets >/dev/null 2>&1 && git config --get-all secrets.patterns >/dev/null 2>&1; then
+  git secrets --pre_commit_hook -- "$@" || exit 1
+fi
+
+# Optional: run gitleaks on staged changes, if installed (runs fully offline)
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --no-banner >/dev/null 2>&1 || {
+    echo "BLOCKED by gitleaks: a staged change looks like it contains a secret." >&2
+    echo "Run: gitleaks protect --staged --redact -v   to see where (values hidden)." >&2
+    exit 1
+  }
+fi
+exit 0
