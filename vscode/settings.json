@@ -1,0 +1,95 @@
+{
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 0.1,
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "files.exclude": {
+        "**/.git": false
+    },
+    "git.openRepositoryInParentFolders": "never",
+    "explorer.confirmDelete": false,
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [
+            80
+        ],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": "off"
+    },
+    "code-runner.runInTerminal": true,
+    "workbench.editorAssociations": {
+        "*.aar": "default"
+    },
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "boot-java.rewrite.reconcile": true,
+    "[dockercompose]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "window.menuBarVisibility": "compact",
+    "workbench.sideBar.location": "right",
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "git.mergeEditor": true,
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "workbench.colorTheme": "Night Wolf (dark blue) (No Italics)",
+    "editor.showFoldingControls": "always",
+    "dart.analysisServerFolding": false,
+    "notebook.showFoldingControls": "always",
+    "editor.foldingStrategy": "indentation",
+    "workbench.iconTheme": "material-icon-theme",
+    "editor.fontFamily": "Fira Code",
+    "[proto]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "rest-client.environmentVariables": {
+        
+
+
+        "$shared": {}
+    },
+    "workbench.settings.useSplitJSON": true,
+    "chat.tools.terminal.outputLocation": "chat",
+    "[vue]": {
+        "editor.defaultFormatter": "Vue.volar"
+    },
+    "amazonQ.suppressPrompts": {
+        "amazonQChatDisclaimer": true,
+        "amazonQChatPairProgramming": true,
+        "amazonQSessionConfigurationMessage": true
+    },
+    "git.autofetch": true,
+    "amazonQ.telemetry": false,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
+    },
+    "workbench.editor.empty.hint": "hidden",
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true
+}
