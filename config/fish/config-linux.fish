@@ -6,4 +6,7 @@ echo "don't forget, We don't talk about Fight Club."
 set_color normal
 #end
 
-set -Ux fish_user_paths /opt/nvim/bin $fish_user_paths
+alias ls "ls -p --color=auto"
+
+# fish_add_path skips paths that are already there or do not exist
+fish_add_path /opt/nvim/bin
