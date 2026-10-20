@@ -16,10 +16,17 @@ blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E -i \
   '(^|/)\.env($|\.)|(^|/)[^/]*\.env$|credential[^/]*\.json$|service[-_]?account[^/]*\.json$|application_default_credentials\.json$|\.(pem|key|p12|pfx)$|(^|/)id_(rsa|ed25519)|(^|/)secrets/' \
   | grep -E -v -i '\.env\.(example|sample|template)$')
 
+# False positives: one regex per line in .claude/secure-allow ("#" = comment)
+if [ -n "$blocked" ] && [ -f .claude/secure-allow ]; then
+  allow=$(grep -v '^[[:space:]]*#' .claude/secure-allow | sed '/^[[:space:]]*$/d')
+  [ -n "$allow" ] && blocked=$(printf '%s\n' "$blocked" | grep -E -v -i -f <(printf '%s\n' "$allow"))
+fi
+
 if [ -n "$blocked" ]; then
   echo "BLOCKED by claude-secure: these staged files look like secrets:" >&2
   echo "$blocked" | sed 's/^/  - /' >&2
   echo "Unstage them with: git rm --cached <file>" >&2
+  echo "False positive? Add a regex line to .claude/secure-allow (see GIT-FLOW.md)." >&2
   exit 1
 fi
 
