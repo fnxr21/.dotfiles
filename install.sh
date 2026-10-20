@@ -129,6 +129,10 @@ setup_git() {
       say "installing git-secrets hooks template"
       run git secrets --install "$HOME/.git-templates/git-secrets"
     fi
+    # claude-secure installs its own pre-commit (which also runs git-secrets) on `git init`
+    if [ -e "$HOME/.git-templates/git-secrets/hooks/pre-commit" ]; then
+      run rm "$HOME/.git-templates/git-secrets/hooks/pre-commit"
+    fi
   else
     warn "git-secrets not installed: new repos will not get the secret hooks"
   fi
