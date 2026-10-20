@@ -1,3 +1,8 @@
 {
-  "theme": "auto"
+  "theme": "auto",
+  "includeCoAuthoredBy": false,
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
 }
